@@ -1,3 +1,4 @@
+var PORT = 9999;
 var http = require('http');
 var sockjs = require('sockjs');
 var node_static = require('node-static');
@@ -31,4 +32,4 @@ server.addListener('upgrade', function(req,res){
 sockjs_echo.installHandlers(server, {prefix:'/echo'});
 
 console.log(' [*] Listening on 0.0.0.0:9999' );
-server.listen(9999, '0.0.0.0');
+server.listen(PORT, '0.0.0.0');
