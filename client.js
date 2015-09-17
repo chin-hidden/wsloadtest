@@ -22,6 +22,7 @@ client.onclose = function(){
 };
 
 client.onmessage = function(e){
+	console.log('Message: ' + e.data);
 }
   }, i * new_conn_interval);
 }
