@@ -5,8 +5,9 @@ var argv = require('yargs').argv;
 var ws = require('./ws.js');
 var logger = require('./logger.js');
 var CCU = argv.ccu || 100;
+var HOST = argv.host || "http://localhost:8080/echo";
 
-var def = ws.create_conn_swarm("http://localhost:8080/echo", CCU);
+var def = ws.create_conn_swarm(HOST, CCU);
 
 function msg_count(swarms){
 	return swarms.map(function(conn){

@@ -24,3 +24,12 @@ For testing, edit var HOST & CLIENT_NUMBER
 
 That will create x number of client and connect to our target server.
 
+## Lazy Client
+This client simply create a number of connection to the server
+
+Arguments:
+    --ccu   Number of concurrent connection
+    --host  URL of the host
+E.g:
+node lazy_client.js --ccu 1000 --host "http://localhost:8080/echo"
+
