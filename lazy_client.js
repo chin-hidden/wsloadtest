@@ -5,7 +5,7 @@ var argv = require('yargs').argv;
 var ws = require('./ws.js');
 var logger = require('./logger.js');
 var CCU = argv.ccu || 100;
-var HOST = argv.host || "http://localhost:8080/echo";
+var HOST = argv.host || "http://localhost:8081/echo";
 
 var def = ws.create_conn_swarm(HOST, CCU);
 

@@ -4,6 +4,9 @@
         "dependencies": {
                 "node-static": "0.5.9",
                 "sockjs": "*",
-		"sockjs-client": "*"
+                "yargs": "*",
+                "console-timestamp": "latest",
+                "deferred" : "latest",
+		        "sockjs-client": "*"
         }
 }
