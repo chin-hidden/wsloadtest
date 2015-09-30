@@ -13,19 +13,21 @@ var self = {
 		var conn = SockJS(host);
 		conn.id = id;
 		conn.msg_count = 0;
-		conn.onopen = function(){
+		conn.onopen = function(e){
+			logger.log(util.format('Connection %s has just connected. It\'s on!', conn.id));
 			def.resolve(conn);
-		}
+		};
 		conn.onclose = function(e){
-			logger.log(util.format('Connection %s closed, reason: %s, bye!', conn.id, e.reason));
+			logger.log(util.format('Connection %s closed, bye!'));
+			logger.log(JSON.stringify(e));
 			conn.status = 'close';
-		}
+		};
 		conn.time_received = [];
 		conn.onmessage = function(e){
 			conn.time_received.push(new Date().getTime());
 			conn.msg_count += 1;
 			time_last_msg = new Date();
-		}
+		};
 		return def.promise;
 	},
 
