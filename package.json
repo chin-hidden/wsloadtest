@@ -1,12 +1,12 @@
 {
-        "name": "sockjs-echo",
-        "version": "0.0.0-unreleasable",
-        "dependencies": {
-                "node-static": "0.5.9",
-                "sockjs": "*",
-                "yargs": "*",
-                "console-timestamp": "latest",
-                "deferred" : "latest",
-		        "sockjs-client": "*"
-        }
+  "name": "sockjs-echo",
+  "version": "0.0.0-unreleasable",
+  "dependencies": {
+    "node-static": "0.5.9",
+    "sockjs": "*",
+    "yargs": "*",
+    "console-timestamp": "latest",
+    "deferred" : "latest",
+    "sockjs-client": "*"
+  }
 }
