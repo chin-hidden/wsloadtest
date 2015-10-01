@@ -1,3 +1,4 @@
+require('look').start();
 var timestamp = require('console-timestamp');
 var argv = require('yargs').argv;
 var util = require('util');
@@ -17,7 +18,7 @@ function broadcast_all(msg_rate, client_list, msg){
         }
         setTimeout(function(){
             process.nextTick(__broadcast_loop);
-        }, 5);
+        }, 1);
     }
     __broadcast_loop();
 }
@@ -33,6 +34,7 @@ function create_string(length){
 	for(var i = 0; i < length; i++){
 		str += 'a';
 	}
+    return str;
 }
 
 function main(){
