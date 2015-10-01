@@ -8,9 +8,6 @@ var logger = require('./logger.js');
 var PORT = argv.port || 8081;
 var MSG_RATE = argv.msgrate || 20;
 
-var sockjs_opts = {sockjs_url: "http://cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js",
-    log: function(){}};
-
 function broadcast_all(msg_rate, client_list, msg){
     function __broadcast_loop(){
         for(var i = 0; i < client_list.length; i++){
