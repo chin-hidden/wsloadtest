@@ -48,7 +48,7 @@ var self = {
 						}
 					});
 				}, delay);
-			})(i, i * 10);
+			})(i, i * 30);
 		}
 		return def.promise;
 	},
@@ -73,10 +73,6 @@ var self = {
 		});
 		// 3. Usual http stuff
 		var server = http.createServer();
-		var static_directory = new node_static.Server(__dirname);
-		server.addListener('request', function(req, res) {
-			static_directory.serve(req, res);
-		});
 
 		server.addListener('upgrade', function(req,res){
 			res.end();

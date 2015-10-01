@@ -6,7 +6,10 @@
     "sockjs": "*",
     "yargs": "*",
     "console-timestamp": "latest",
-    "deferred" : "latest",
+    "deferred": "latest",
     "sockjs-client": "*"
+  },
+  "devDependencies": {
+    "chai": "^3.3.0"
   }
 }
