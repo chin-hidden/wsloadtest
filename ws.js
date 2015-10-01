@@ -5,6 +5,7 @@ var http = require('http');
 var sockjs = require('sockjs');
 var node_static = require('node-static');
 var util = require('util');
+var EventEmitter = require('events');
 
 var self = {
 
@@ -18,7 +19,7 @@ var self = {
 			def.resolve(conn);
 		};
 		conn.onclose = function(e){
-			logger.log(util.format('Connection %s closed, bye!'));
+			logger.log(util.format('Connection %s closed, bye!', conn.id));
 			logger.log(JSON.stringify(e));
 			conn.status = 'close';
 		};
@@ -62,6 +63,7 @@ var self = {
 		var client_list = [];
 		var client_map = {};
 		var sockjs_echo = sockjs.createServer(sockjs_opts);
+		var emitter = new EventEmitter();
 
 		sockjs_echo.on('connection', function(conn) {
 			client_map[conn.id] = conn;
@@ -74,6 +76,19 @@ var self = {
 		// 3. Usual http stuff
 		var server = http.createServer();
 
+		server.addListener('request', function(req, res) {
+			logger.log('Request received at: ' + req.url);
+
+			if (req.url.match(/^\/stop/)) {
+				emitter.emit('stop');
+			}
+
+			if (req.url.match(/^\/start/)) {
+				emitter.emit('start');
+			}
+
+			res.end('ok');
+		});
 		server.addListener('upgrade', function(req,res){
 			res.end();
 		});
@@ -85,10 +100,11 @@ var self = {
 		server.listen(port, '0.0.0.0');
 
 		return {
-			'client_list': client_list,
-			'client_map': client_map,
-			'server': server,
-			'sockjs': sockjs_echo
+			client_list: client_list,
+			client_map: client_map,
+			server: server,
+			sockjs: sockjs_echo,
+			emitter: emitter
 		}
 	}
 }

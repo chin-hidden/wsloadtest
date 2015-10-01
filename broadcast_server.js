@@ -9,12 +9,13 @@ var logger = require('./logger.js');
 var PORT = argv.port || 8081;
 var MSG_RATE = argv.msgrate || 20;
 
-function broadcast_all(msg_rate, client_list, msg){
-    function _broadcast_loop(){
-        for(var i = 0; i < client_list.length; i++){
-            client_list[i].write(msg);
-        }
+function _broadcast_loop(){
+    for (var i = 0; i < client_list.length; i++){
+        client_list[i].write(msg);
     }
+}
+
+function broadcast_all(msg_rate, client_list, msg){
     var task = new Task();
     task.start(_broadcast_loop);
     return task;
@@ -28,7 +29,7 @@ function print_server_stats_periodically(client_map){
 
 function create_string(length){
     var str = '';
-    for(var i = 0; i < length; i++){
+    for (var i = 0; i < length; i++){
         str += 'a';
     }
     return str;
@@ -37,11 +38,22 @@ function create_string(length){
 function main(){
     logger.log(util.format('Running with %d msg per sec at port: %d', MSG_RATE, PORT));
     var server = ws.create_server(PORT);
-    task = broadcast_all(MSG_RATE, server.client_list, create_string(200));
-    setTimeout(function(){
-        console.log('Stopping sending message');
-        task.stop();
-    }, 10000);
+    var runner = broadcast_all(MSG_RATE, server.client_list, create_string(200));
+
+    server.emitter.on('stop', function(){
+        runner.stop();
+        logger.log('Stop sending message');
+    });
+
+    server.emitter.on('start', function(){
+        try {
+            runner.start(_broadcast_loop);
+            logger.log('Start sending message');
+        } catch(e) {
+            logger.log('Attempted to start sending message, but failed: ' + e.message);
+        }
+    });
+
     print_server_stats_periodically(server.client_map);
 }
 
