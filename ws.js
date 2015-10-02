@@ -34,26 +34,32 @@ var self = {
 
 	create_conn_swarm: function(host, count){
 		var def = deferred();
-		var swarms = [];
+		var swarm = [];
 		var resolved = false;
 		for(var i = 0; i < count; i++){
 			// this is to preserve variable i for connection id
 			(function(conn_id, delay){
 				setTimeout(function(){
 					self.open_connection(host, conn_id).done(function(conn){
-						swarms.push(conn);
-						logger.log(util.format('New connection open: %s, swarm size: %d', conn.id, swarms.length));
+						swarm.push(conn);
+						logger.log(util.format('New connection open: %s, swarm size: %d', conn.id, swarm.length));
 
 						var listener = conn.onclose;
 						conn.onclose = function(e) {
 							if (typeof listener === 'function') {
 								listener.apply(null, [e]);
 							}
-							delete swarms[conn_id];
+
+							for (var j = 0; j < swarm.length; j++) {
+								if (swarm[j].id === conn.id) {
+									swarm.splice(j, 1);
+									break;
+								}
+							}
 						};
 
 						if(!resolved){
-							def.resolve(swarms);
+							def.resolve(swarm);
 							resolved = true;
 						}
 					});
