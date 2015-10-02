@@ -2,12 +2,14 @@
   "name": "sockjs-echo",
   "version": "0.0.0-unreleasable",
   "dependencies": {
-    "node-static": "0.5.9",
-    "sockjs": "*",
-    "yargs": "*",
     "console-timestamp": "latest",
     "deferred": "latest",
-    "sockjs-client": "*"
+    "express": "^4.13.3",
+    "node-static": "0.5.9",
+    "sockjs": "*",
+    "sockjs-client": "*",
+    "underscore": "^1.8.3",
+    "yargs": "*"
   },
   "devDependencies": {
     "chai": "^3.3.0"

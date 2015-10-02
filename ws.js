@@ -43,6 +43,15 @@ var self = {
 					self.open_connection(host, conn_id).done(function(conn){
 						swarms.push(conn);
 						logger.log(util.format('New connection open: %s, swarm size: %d', conn.id, swarms.length));
+
+						var listener = conn.onclose;
+						conn.onclose = function(e) {
+							if (typeof listener === 'function') {
+								listener.apply(null, [e]);
+							}
+							delete swarms[conn_id];
+						};
+
 						if(!resolved){
 							def.resolve(swarms);
 							resolved = true;
