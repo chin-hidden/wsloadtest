@@ -54,6 +54,7 @@ app.get('/swarm/_ping', function(req, res) {
         };
 
         conn.sent_at = new Date().getTime();
+        delete conn.received_at;
         conn.send(JSON.stringify({type: 'ping'}));
     });
 
