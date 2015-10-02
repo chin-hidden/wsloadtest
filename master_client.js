@@ -54,7 +54,11 @@ var fetch_reports_as_promises = function() {
                 body += chunk;
             });
             _res.on('end', function() {
-                def.resolve({status: 'ok', description: 'ok', reports: JSON.parse(body)});
+                var reports = JSON.parse(body);
+                reports.forEach(function(report) {
+                    report.agent = agent;
+                });
+                def.resolve({status: 'ok', description: 'ok', reports: reports});
             });
         }).on('error', function(e) {
             def.resolve({status: 'nok', description: e.message, reports: []});
