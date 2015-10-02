@@ -72,8 +72,7 @@ app.get('/swarm/_ping', function(req, res) {
             no_timeout: partitions[1].length,
             min_rtt: _.min(rtts),
             max_rtt: _.max(rtts),
-            mean_rtt: rtts.reduce(function(rtt1, rtt2) { return rtt1 + rtt2; }, 0) / rtts.length,
-            wait_time: wait_time * 1000
+            mean_rtt: rtts.reduce(function(rtt1, rtt2) { return rtt1 + rtt2; }, 0) / rtts.length
         };
         ping_reports.push(report);
 

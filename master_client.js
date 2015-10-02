@@ -4,6 +4,8 @@ var http = require('http');
 var deferred = require('deferred');
 
 var logger = require('./logger');
+var report_processor = require('./deps/report_processor');
+var _ = require('underscore');
 
 var express = require('express');
 
@@ -20,14 +22,18 @@ app.get('/agents/_start', function(req, res) {
     var ccu = req.query.ccu || 20;
 
     agents.forEach(function(agent) {
-        http.get('http://' + agent + '/swarm/_start?host=' + host + '&ccu=' + ccu);
+        http.get('http://' + agent + '/swarm/_start?host=' + host + '&ccu=' + ccu).on('error', function(e) {
+            console.error('/agents/_start failed', agent, e.message);
+        });
     });
     res.end();
 });
 
 app.get('/agents/_stop', function(req, res) {
     agents.forEach(function(agent) {
-        http.get('http://' + agent + '/swarm/_stop');
+        http.get('http://' + agent + '/swarm/_stop').on('error', function(e) {
+            console.error('/agents/_stop failed', agent, e.message);
+        });
     });
     res.end();
 });
@@ -35,7 +41,9 @@ app.get('/agents/_stop', function(req, res) {
 app.get('/agents/_ping', function(req, res) {
     var wait = req.query.wait || 5;
     agents.forEach(function(agent) {
-        http.get('http://' + agent + '/swarm/_ping?wait=' + wait);
+        http.get('http://' + agent + '/swarm/_ping?wait=' + wait).on('error', function(e) {
+            console.error('/agents/_ping failed', agent, e.message);
+        });
     });
     res.end();
 });
@@ -56,11 +64,12 @@ var fetch_reports_as_promises = function() {
             _res.on('end', function() {
                 var reports = JSON.parse(body);
                 reports.forEach(function(report) {
-                    report.agent = agent;
+                    report.agents = [agent];
                 });
                 def.resolve({status: 'ok', description: 'ok', reports: reports});
             });
         }).on('error', function(e) {
+            console.error('/reports failed', agent, e.message);
             def.resolve({status: 'nok', description: e.message, reports: []});
         });
         promises.push(def.promise);
@@ -69,7 +78,11 @@ var fetch_reports_as_promises = function() {
 };
 app.get('/reports', function(req, res) {
     deferred.apply(null, fetch_reports_as_promises())(function(_res) {
-        logger.log('Detailed reports & status: ' + JSON.stringify(_res));
+        if (!_.isArray(_res)) {
+            _res = [_res];
+        }
+
+        logger.log('Detailed reports & status: ' + JSON.stringify(_res, null, 2));
         var reports = _res.map(function(item) {
             return item.reports;
         }).reduce(function(a, b) {
@@ -85,41 +98,16 @@ app.get('/reports/_brief', function(req, res) {
             return item.reports;
         }).reduce(function(a, b) {
             return a.concat(b);
-        }, []).reduce(function(r1, r2) {
-            r1 || (r1 = {});
-            r2 || (r2 = {});
-
-            r1.no_received = r1.no_received || 0;
-            r2.no_received = r2.no_received || 0;
-
-            r1.no_timeout = r1.no_timeout || 0;
-            r2.no_timeout = r2.no_timeout || 0;
-
-            r1.min_rtt = r1.no_received > 0 ? r1.min_rtt : null;
-            r2.min_rtt = r2.no_received > 0 ? r2.min_rtt : null;
-
-            r1.max_rtt = r1.no_received > 0 ? r1.max_rtt : null;
-            r2.max_rtt = r2.no_received > 0 ? r2.max_rtt : null;
-
-            r1.mean_rtt = r1.no_received > 0 ? r1.mean_rtt : 0;
-            r2.mean_rtt = r2.no_received > 0 ? r2.mean_rtt : 0;
-
-            return {
-                no_received: r1.no_received + r2.no_received,
-                no_timeout: r1.no_timeout + r2.no_timeout,
-                min_rtt: Math.min(r1.min_rtt, r2.min_rtt),
-                max_rtt: Math.max(r1.max_rtt, r2.max_rtt),
-                mean_rtt: r1.no_received > 0 || r2.no_received > 0 ?
-                    (r1.mean_rtt * r1.no_received + r2.mean_rtt * r2.no_received) / (r1.no_received + r2.no_received) : null
-            }
-        }, {no_received: 0, no_timeout: 0, min_rtt: null, max_rtt: null, mean_rtt: null});
+        }, []).reduce(report_processor.sum, report_processor.gen_empty());
         res.json(reports);
     });
 });
 
 app.get('/reports/_flush', function(req, res) {
     agents.forEach(function(agent) {
-        http.get('http://' + agent + '/reports/_flush');
+        http.get('http://' + agent + '/reports/_flush').on('error', function(e) {
+            console.error('/reports/_flush failed', agent, e.message);
+        });
     });
     res.end();
 });
