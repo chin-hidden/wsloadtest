@@ -3,7 +3,7 @@ var util = require('util');
 var http = require('http');
 var deferred = require('deferred');
 
-var logger = require('./logger');
+var logger = require('./deps/logger');
 var report_processor = require('./deps/report_processor');
 var _ = require('underscore');
 

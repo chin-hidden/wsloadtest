@@ -2,8 +2,8 @@
 	Only receive message and measure message rate
 */
 var argv = require('yargs').argv;
-var ws = require('./ws.js');
-var logger = require('./logger.js');
+var ws = require('./deps/ws.js');
+var logger = require('./deps/logger.js');
 var util = require('util');
 var CCU = argv.ccu || 100;
 var HOST = argv.host || "http://localhost:8081/echo";

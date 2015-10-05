@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var Task = require('./task.js').Task;
+var Task = require('../deps/task.js').Task;
 
 describe('Task', function(){
     var task;

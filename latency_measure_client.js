@@ -9,8 +9,8 @@ var argv = require('yargs').argv;
 var SockJS = require('sockjs-client');
 var StatsArray = require('stats-array');
 var util = require('util');
-var ws = require('./ws.js');
-var logger = require('./logger.js');
+var ws = require('./deps/ws.js');
+var logger = require('./deps/logger.js');
 
 var MEASURE_TIME = argv.measuretime || 5000;
 var CCU_COUNT = argv.ccu || 50;
@@ -63,9 +63,9 @@ function log_latency_stats(latency_stats_list){
 
 function log_stats(msg, num_list){
     logger.log(util.format(msg + " :: Mean: %d, Max: %d, Min: %d, stdDeviation: %d",
-                        num_list.mean(), 
-                        num_list.max(), 
-                        num_list.min(), 
+                        num_list.mean(),
+                        num_list.max(),
+                        num_list.min(),
                         num_list.stdDeviation()
                         ));
 }
@@ -97,7 +97,7 @@ function estimated_sent_time(start_time, msg_count, duration){
     // what is the estimated sent_time if I start at start_time
     // sending out msg_count messages per duration?
     var interval = duration/msg_count;
-    var predicted_sent_time = [];        
+    var predicted_sent_time = [];
     for(var i = 0; i < msg_count; i++){
         predicted_sent_time.push(start_time + i * interval);
     }
@@ -138,7 +138,7 @@ function main(){
                     throw "roundtrip_time has not been calculated";
                 }
                 // adjusting the round trip
-                var server_sent_time = sent_time + roundtrip_time; 
+                var server_sent_time = sent_time + roundtrip_time;
                 var estimated = estimated_sent_time(server_sent_time, MSG_COUNT, DURATION);
 
                 var latency_stats_list = [];

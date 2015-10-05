@@ -2,9 +2,9 @@ require('look').start();
 var timestamp = require('console-timestamp');
 var argv = require('yargs').argv;
 var util = require('util');
-var ws = require('./ws.js');
-var Task = require('./task.js').Task;
-var logger = require('./logger.js');
+var ws = require('./deps/ws.js');
+var Task = require('./deps/task.js').Task;
+var logger = require('./deps/logger.js');
 
 var PORT = argv.port || 8081;
 var MSG_RATE = argv.msgrate || 20;

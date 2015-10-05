@@ -4,7 +4,7 @@ var argv = require('yargs').argv;
 var http = require('http');
 var sockjs = require('sockjs');
 var node_static = require('node-static');
-var logger = require('./logger.js');
+var logger = require('./deps/logger.js');
 
 var PORT = argv.port || 8080;
 

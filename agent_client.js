@@ -2,8 +2,8 @@ var argv = require('yargs').argv;
 var util = require('util');
 var _ = require('underscore');
 
-var ws = require('./ws');
-var logger = require('./logger');
+var ws = require('./deps/ws');
+var logger = require('./deps/logger');
 
 var express = require('express');
 
