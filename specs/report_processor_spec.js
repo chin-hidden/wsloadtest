@@ -21,12 +21,12 @@ describe('report_processor', function() {
       expect(report.no_timeout).to.be.equal(0);
     });
 
-    it('should create a new object with min_rtt as null', function() {
-      expect(report.min_rtt).to.be.null;
+    it('should create a new object with min_rtt as Inf', function() {
+      expect(report.min_rtt).to.be.equal(Infinity);
     });
 
-    it('should create a new object with max_rtt as null', function() {
-      expect(report.max_rtt).to.be.null;
+    it('should create a new object with max_rtt as -Inf', function() {
+      expect(report.max_rtt).to.be.equal(-Infinity);
     });
 
     it('should create a new object with mean_rtt as null', function() {
