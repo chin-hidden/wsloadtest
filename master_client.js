@@ -5,6 +5,7 @@ var deferred = require('deferred');
 
 var logger = require('./deps/logger');
 var report_processor = require('./deps/report_processor');
+var ws = require('./deps/ws');
 var _ = require('underscore');
 
 var express = require('express');
@@ -179,6 +180,24 @@ app.get('/reports/_flush', function(req, res) {
 
 app.get('/agents', function(req, res) {
     res.json(agents);
+});
+
+app.get('/host/_broadcast', function(req, res) {
+    var host = req.query.host || 'https://priceservice.vndirect.com.vn/realtime';
+    var hits = req.query.hits || 1;
+    var tick = req.query.tick || 10; // in ms
+    var message = req.query.message || 'This is the message for broadcasting';
+
+    logger.info(util.format('Commanding host %s to broadcast test message to all its subscriber, rate: %d per %dms', host, hits, tick));
+    ws.open_connection(host, 'test_master').done(function(conn) {
+        for (var i = 0; i < hits; i++) {
+            setTimeout(function() {
+                var data = util.format('[%d] %s', new Date().getTime(), message);
+                conn.send(JSON.stringify({type: 'loadTest', data: data}));
+            }, i * tick);
+        }
+    });
+    res.end();
 });
 
 app.listen(port, '0.0.0.0', function() {
