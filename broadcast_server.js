@@ -23,7 +23,7 @@ function broadcast_all(msg_rate, client_list, msg){
 
 function print_server_stats_periodically(client_map){
     setInterval(function(){
-        logger.log('Current active connection: ' + Object.keys(client_map).length);
+        logger.info('Current active connection: ' + Object.keys(client_map).length);
     }, 5000);
 }
 
@@ -36,21 +36,21 @@ function create_string(length){
 }
 
 function main(){
-    logger.log(util.format('Running with %d msg per sec at port: %d', MSG_RATE, PORT));
+    logger.info(util.format('Running with %d msg per sec at port: %d', MSG_RATE, PORT));
     var server = ws.create_server(PORT);
     var runner = broadcast_all(MSG_RATE, server.client_list, create_string(200));
 
     server.emitter.on('stop', function(){
         runner.stop();
-        logger.log('Stop sending message');
+        logger.info('Stop sending message');
     });
 
     server.emitter.on('start', function(){
         try {
             runner.start(_broadcast_loop);
-            logger.log('Start sending message');
+            logger.info('Start sending message');
         } catch(e) {
-            logger.log('Attempted to start sending message, but failed: ' + e.message);
+            logger.error('Attempted to start sending message, but failed: ' + e.message);
         }
     });
 

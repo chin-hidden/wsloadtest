@@ -23,7 +23,7 @@ app.get('/agents/_start', function(req, res) {
 
     agents.forEach(function(agent) {
         http.get('http://' + agent + '/swarm/_start?host=' + host + '&ccu=' + ccu).on('error', function(e) {
-            console.error('/agents/_start failed', agent, e.message);
+            logger.error('/agents/_start failed - ' + agent + ' - ' + e.message);
         });
     });
     res.end();
@@ -32,7 +32,7 @@ app.get('/agents/_start', function(req, res) {
 app.get('/agents/_stop', function(req, res) {
     agents.forEach(function(agent) {
         http.get('http://' + agent + '/swarm/_stop').on('error', function(e) {
-            console.error('/agents/_stop failed', agent, e.message);
+            logger.error('/agents/_stop failed - ' + agent + ' - ' + e.message);
         });
     });
     res.end();
@@ -42,7 +42,7 @@ app.get('/agents/_ping', function(req, res) {
     var wait = req.query.wait || 5;
     agents.forEach(function(agent) {
         http.get('http://' + agent + '/swarm/_ping?wait=' + wait).on('error', function(e) {
-            console.error('/agents/_ping failed', agent, e.message);
+            logger.error('/agents/_ping failed - ' + agent + ' - ' + e.message);
         });
     });
     res.end();
@@ -69,7 +69,7 @@ var fetch_reports_as_promises = function() {
                 def.resolve({status: 'ok', description: 'ok', reports: reports});
             });
         }).on('error', function(e) {
-            console.error('/reports failed', agent, e.message);
+            logger.error('/reports failed - ' + agent + ' - ' + e.message);
             def.resolve({status: 'nok', description: e.message, reports: []});
         });
         promises.push(def.promise);
@@ -82,7 +82,7 @@ app.get('/reports', function(req, res) {
             _res = [_res];
         }
 
-        logger.log('Detailed reports & status: ' + JSON.stringify(_res, null, 2));
+        logger.info('Detailed reports & status: ' + JSON.stringify(_res, null, 2));
         var reports = _res.map(function(item) {
             return item.reports;
         }).reduce(function(a, b) {
@@ -90,7 +90,7 @@ app.get('/reports', function(req, res) {
         }, []);
         res.json(reports);
     }, function(e) {
-        console.error('shit happened: ', e);
+        logger.error('shit happened: ' + e);
     });
 });
 
@@ -108,7 +108,7 @@ app.get('/reports/_brief', function(req, res) {
 app.get('/reports/_flush', function(req, res) {
     agents.forEach(function(agent) {
         http.get('http://' + agent + '/reports/_flush').on('error', function(e) {
-            console.error('/reports/_flush failed', agent, e.message);
+            logger.error('/reports/_flush failed - ' + agent + ' - ' + e.message);
         });
     });
     res.end();
@@ -119,5 +119,5 @@ app.get('/agents', function(req, res) {
 });
 
 app.listen(port, '0.0.0.0', function() {
-    logger.log('Master started @ port ' + port);
+    logger.info('Master started @ port ' + port);
 });

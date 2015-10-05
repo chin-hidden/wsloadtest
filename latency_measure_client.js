@@ -62,7 +62,7 @@ function log_latency_stats(latency_stats_list){
 }
 
 function log_stats(msg, num_list){
-    logger.log(util.format(msg + " :: Mean: %d, Max: %d, Min: %d, stdDeviation: %d",
+    logger.info(util.format(msg + " :: Mean: %d, Max: %d, Min: %d, stdDeviation: %d",
                         num_list.mean(),
                         num_list.max(),
                         num_list.min(),
@@ -79,7 +79,7 @@ function print_time_stats(time_sent, time_received_list){
     var max_delay = time_list.max() - time_sent;
     var min_delay = time_list.min() - time_sent;
     var stdDeviation = time_list.stdDeviation();
-    logger.log(util.format("Mean: %d, Max: %d, Min: %d, stdDeviation: %d",
+    logger.info(util.format("Mean: %d, Max: %d, Min: %d, stdDeviation: %d",
                         mean_delay, max_delay, min_delay, stdDeviation));
 }
 
@@ -89,7 +89,7 @@ function print_stats(num_list){
     var max_delay = num_list.max();
     var min_delay = num_list.min();
     var stdDeviation = num_list.stdDeviation();
-    logger.log(util.format("Sum: %d, Mean: %d, Max: %d, Min: %d, stdDeviation: %d",
+    logger.info(util.format("Sum: %d, Mean: %d, Max: %d, Min: %d, stdDeviation: %d",
                         sum, mean_delay, max_delay, min_delay, stdDeviation));
 }
 
@@ -114,7 +114,7 @@ function gen_string(length){
 
 function main(){
     // ::: Main App :::
-    logger.log('Running benchmark with ccu ' + CCU_COUNT + ' and host: ' + HOST);
+    logger.info('Running benchmark with ccu ' + CCU_COUNT + ' and host: ' + HOST);
 
     ws.create_conn_swarm(HOST, CCU_COUNT)
     .done(function(swarm){
@@ -127,8 +127,8 @@ function main(){
                 'duration': DURATION,
                 'message': gen_string(200),
             }));
-            logger.log('Message sent. Number of active conn: ' + swarm.length);
-            logger.log('Expecting ' + MSG_COUNT + ' echo message for each');
+            logger.info('Message sent. Number of active conn: ' + swarm.length);
+            logger.info('Expecting ' + MSG_COUNT + ' echo message for each');
             after(MEASURE_TIME).done(function(){
                 var total_msg_count = swarm.map(function(conn){
                     return conn.msg_count;
@@ -157,7 +157,7 @@ function main(){
                     // only accept the first ping
                     var ping_received_time = new Date().getTime();
                     roundtrip_time = (ping_received_time - sent_time)/2;
-                    logger.log('Echoed time: ' + ping_received_time + ' Round trip time: ' + roundtrip_time);
+                    logger.info('Echoed time: ' + ping_received_time + ' Round trip time: ' + roundtrip_time);
                 }
             }
         });

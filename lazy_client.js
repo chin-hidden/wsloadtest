@@ -17,11 +17,11 @@ function msg_count(swarms){
 }
 
 def.done(function(swarms){
-	logger.log(util.format('Done! swarm size: %d', swarms.length));
+	logger.info(util.format('Done! swarm size: %d', swarms.length));
 	var curr_count = msg_count(swarms);
 	setInterval(function(){
 		var count = msg_count(swarms);
-		logger.log(util.format('Swarm size: %d, Message rate: %s per sec', swarms.length, (msg_count(swarms) - curr_count)/5));
+		logger.info(util.format('Swarm size: %d, Message rate: %s per sec', swarms.length, (msg_count(swarms) - curr_count)/5));
 		curr_count = count;
 	}, 5000);
 });

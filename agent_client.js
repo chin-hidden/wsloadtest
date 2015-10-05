@@ -26,14 +26,14 @@ var count = function() {
 
 app.get('/swarm/_start', function(req, res) {
     if (swarm.length > 0) {
-        logger.log('A swarm is already running, force closing...');
+        logger.info('A swarm is already running, force closing...');
         stop();
     }
 
     var host = req.query.host || 'http://localhost:8081/echo';
     var ccu = req.query.ccu || 20;
 
-    logger.log('Creating swarm of ' + ccu + ' connections to ' + host);
+    logger.info('Creating swarm of ' + ccu + ' connections to ' + host);
     var def = ws.create_conn_swarm(host, ccu).done(function(_swarm) {
         swarm = _swarm;
     });
@@ -47,7 +47,7 @@ app.get('/swarm/_stop', function(req, res) {
 
 app.get('/swarm/_ping', function(req, res) {
     var wait_time = req.query.wait || 5;
-    logger.log('Start sending ping');
+    logger.info('Start sending ping');
     swarm.forEach(function(conn) {
         conn.onmessage = function(e) {
             conn.received_at = new Date().getTime();
@@ -94,9 +94,9 @@ app.get('/swarm/_count', function(req, res) {
 });
 
 app.listen(port, '0.0.0.0', function() {
-    logger.log('Agent started @ port ' + port);
+    logger.info('Agent started @ port ' + port);
 });
 
 setInterval(function() {
-    logger.log('Current swarm size: ' + count());
+    logger.info('Current swarm size: ' + count());
 }, 10000);

@@ -15,12 +15,12 @@ var self = {
 		conn.id = id;
 		conn.msg_count = 0;
 		conn.onopen = function(e){
-			logger.log(util.format('Connection %s has just connected. It\'s on!', conn.id));
+			logger.info(util.format('Connection %s has just connected. It\'s on!', conn.id));
 			def.resolve(conn);
 		};
 		conn.onclose = function(e){
-			logger.log(util.format('Connection %s closed, bye!', conn.id));
-			logger.log(JSON.stringify(e));
+			logger.info(util.format('Connection %s closed, bye!', conn.id));
+			logger.info(JSON.stringify(e));
 			conn.status = 'close';
 		};
 		conn.time_received = [];
@@ -42,7 +42,7 @@ var self = {
 				setTimeout(function(){
 					self.open_connection(host, conn_id).done(function(conn){
 						swarm.push(conn);
-						logger.log(util.format('New connection open: %s, swarm size: %d', conn.id, swarm.length));
+						logger.info(util.format('New connection open: %s, swarm size: %d', conn.id, swarm.length));
 
 						var listener = conn.onclose;
 						conn.onclose = function(e) {
@@ -92,7 +92,7 @@ var self = {
 		var server = http.createServer();
 
 		server.addListener('request', function(req, res) {
-			logger.log('Request received at: ' + req.url);
+			logger.info('Request received at: ' + req.url);
 
 			if (req.url.match(/^\/stop/)) {
 				emitter.emit('stop');
@@ -110,7 +110,7 @@ var self = {
 
 		sockjs_echo.installHandlers(server, {prefix:'/echo'});
 
-		logger.log(util.format('[*] Listening on 0.0.0.0:%d', port));
+		logger.info(util.format('[*] Listening on 0.0.0.0:%d', port));
 
 		server.listen(port, '0.0.0.0');
 

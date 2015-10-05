@@ -21,7 +21,7 @@ function conn_count(){
 function print_server_stats(){
     setInterval(function(){
         // print server stats
-        logger.log('Current active connection: ' + conn_count());
+        logger.info('Current active connection: ' + conn_count());
     }, 5000);
 }
 
@@ -29,7 +29,7 @@ function interval_execute(duration, count, callback){
     // callback 'count' times during 'time'
     var i = 0;
     var interval_time = duration/count;
-    logger.log('Echoing at time interval: ' + interval_time);
+    logger.info('Echoing at time interval: ' + interval_time);
     for(var i = 0; i < count; i++){
         (function(index){
             setTimeout(function(){
@@ -48,10 +48,10 @@ sockjs_echo.on('connection', function(conn) {
 
     conn.on('data', function(message){
         var args = JSON.parse(message);
-        logger.log('Echo back: ' + args.count + ' message to ' + conn_count() + ' client');
+        logger.info('Echo back: ' + args.count + ' message to ' + conn_count() + ' client');
         conn.write('ping');
         interval_execute(args.duration, args.count, function(index){
-            logger.log('Echo message number: ' + index);
+            logger.info('Echo message number: ' + index);
             for(var key in client_map){
                 client_map[key].write(args.message);
             }
@@ -75,7 +75,7 @@ server.addListener('upgrade', function(req,res){
 
 sockjs_echo.installHandlers(server, {prefix:'/echo'});
 
-logger.log(' [*] Listening on 0.0.0.0:' + PORT );
+logger.info(' [*] Listening on 0.0.0.0:' + PORT );
 
 server.listen(PORT, '0.0.0.0');
 
