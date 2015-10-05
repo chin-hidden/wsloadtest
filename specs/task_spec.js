@@ -26,7 +26,7 @@ describe('Task', function(){
             task.start(runner, 10);
             setTimeout(function() {
                 expect(counter).to.be.at.least(5);
-                expect(counter).to.be.at.most(6);
+                expect(counter).to.be.at.most(7);
                 done();
             }, 60);
         });

@@ -77,7 +77,7 @@ var fetch_reports_as_promises = function() {
     return promises;
 };
 app.get('/reports', function(req, res) {
-    deferred.apply(null, fetch_reports_as_promises())(function(_res) {
+    deferred.apply(null, fetch_reports_as_promises()).done(function(_res) {
         if (!_.isArray(_res)) {
             _res = [_res];
         }
@@ -89,6 +89,8 @@ app.get('/reports', function(req, res) {
             return a.concat(b);
         }, []);
         res.json(reports);
+    }, function(e) {
+        console.error('shit happened: ', e);
     });
 });
 
