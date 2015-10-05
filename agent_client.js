@@ -89,8 +89,8 @@ app.get('/reports/_flush', function(req, res) {
     res.end();
 });
 
-app.get('/swarm/_count', function(req, res) {
-    res.send('Current swarm size: ' + count());
+app.get('/swarm/_stats', function(req, res) {
+    res.json({swarm_size: count()});
 });
 
 app.listen(port, '0.0.0.0', function() {

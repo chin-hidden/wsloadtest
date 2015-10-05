@@ -10,7 +10,7 @@ var _ = require('underscore');
 var express = require('express');
 
 var agents = [
-    // 'localhost:8082'
+    'localhost:8082'
 ];
 
 var port = argv.port || 8083;
@@ -40,12 +40,68 @@ app.get('/agents/_stop', function(req, res) {
 
 app.get('/agents/_ping', function(req, res) {
     var wait = req.query.wait || 5;
+    var hits = req.query.hits || 1;
+    var tick = req.query.tick || 10; // in ms
     agents.forEach(function(agent) {
-        http.get('http://' + agent + '/swarm/_ping?wait=' + wait).on('error', function(e) {
-            logger.error('/agents/_ping failed - ' + agent + ' - ' + e.message);
-        });
+        for (var i = 0; i < hits; i++) {
+            setTimeout(function() {
+                http.get('http://' + agent + '/swarm/_ping?wait=' + wait).on('error', function(e) {
+                    logger.error('/agents/_ping failed - ' + agent + ' - ' + e.message);
+                });
+            }, i * tick);
+        }
     });
     res.end();
+});
+
+app.get('/agents/_stats', function(req, res) {
+    var promises = [];
+    agents.forEach(function(agent) {
+        var def = deferred();
+        http.get('http://' + agent + '/swarm/_stats', function(_res) {
+            if (_res.statusCode !== 200) {
+                def.resolve({status: 'nok', description: _res.statusMessage, swarm_size: 0});
+                return;
+            }
+
+            var body = '';
+            _res.on('data', function(chunk) {
+                body += chunk;
+            });
+            _res.on('end', function() {
+                var stats = JSON.parse(body);
+                def.resolve({status: 'ok', description: 'ok', swarm_size: stats.swarm_size});
+            });
+        }).on('error', function(e) {
+            logger.error('/agents/_stats failed - ' + agent + ' - ' + e.message);
+            def.resolve({status: 'nok', description: e.message, swarm_size: 0});
+        });
+        promises.push(def.promise);
+    });
+
+    deferred.apply(null, promises).done(function(_res) {
+        if (!_.isArray(_res)) {
+            _res = [_res];
+        }
+
+        var no_dead = _res.filter(function(item) {
+            return item.status !== 'ok';
+        }).length;
+        var no_alive = _res.length - no_dead;
+        var swarm_size = _res.map(function(item) {
+            return item.swarm_size;
+        }).reduce(function(s1, s2) {
+            return s1 + s2;
+        }, 0);
+
+        res.json({
+            no_alive: no_alive,
+            no_dead: no_dead,
+            swarm_size: swarm_size
+        });
+    }, function(e) {
+        logger.error('shit happened: ' + e);
+    });
 });
 
 var fetch_reports_as_promises = function() {
@@ -57,6 +113,7 @@ var fetch_reports_as_promises = function() {
                 def.resolve({status: 'nok', description: _res.statusMessage, reports: []});
                 return;
             }
+
             var body = '';
             _res.on('data', function(chunk) {
                 body += chunk;
@@ -76,13 +133,13 @@ var fetch_reports_as_promises = function() {
     });
     return promises;
 };
+
 app.get('/reports', function(req, res) {
     deferred.apply(null, fetch_reports_as_promises()).done(function(_res) {
         if (!_.isArray(_res)) {
             _res = [_res];
         }
 
-        logger.info('Detailed reports & status: ' + JSON.stringify(_res, null, 2));
         var reports = _res.map(function(item) {
             return item.reports;
         }).reduce(function(a, b) {
@@ -95,13 +152,19 @@ app.get('/reports', function(req, res) {
 });
 
 app.get('/reports/_brief', function(req, res) {
-    deferred.apply(null, fetch_reports_as_promises())(function(_res) {
+    deferred.apply(null, fetch_reports_as_promises()).done(function(_res) {
+        if (!_.isArray(_res)) {
+            _res = [_res];
+        }
+
         var reports = _res.map(function(item) {
             return item.reports;
         }).reduce(function(a, b) {
             return a.concat(b);
         }, []).reduce(report_processor.sum, report_processor.gen_empty());
         res.json(reports);
+    }, function(e) {
+        logger.error('shit happened: ' + e);
     });
 });
 
