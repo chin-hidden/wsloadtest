@@ -8,108 +8,82 @@ var ws = require('./deps/ws');
 var logger = require('./deps/logger');
 
 var spawn_worker = function() {
-    var port = argv.port || 8082;
+  var port = argv.port || 8082;
 
-    var app = express();
+  var app = express();
 
-    var swarm = [];
-    var ping_reports = [];
+  var agent = new (require('./deps/agent').Agent)();
+  var ping_reports = [];
 
-    var stop = function() {
-        swarm.forEach(function(conn) {
-            conn.close();
-        });
-        swarm = [];
-    };
-    var count = function() {
-        return swarm.filter(function(conn) { return conn; }).length;
-    };
+  app.get('/swarm/_start', function(req, res) {
+    if (agent.swarm_size() > 0) {
+      logger.info('A swarm is already running, force closing...');
+      agent.stop();
+    }
 
-    app.get('/swarm/_start', function(req, res) {
-        if (swarm.length > 0) {
-            logger.info('A swarm is already running, force closing...');
-            stop();
-        }
+    var host = req.query.host || 'https://priceservice.vndirect.com.vn/realtime';
+    var ccu = req.query.ccu || 20;
 
-        var host = req.query.host || 'https://priceservice.vndirect.com.vn/realtime';
-        var ccu = req.query.ccu || 20;
+    logger.info('Creating swarm of ' + ccu + ' connections to ' + host);
+    agent.start(host, ccu);
+    res.end();
+  });
 
-        logger.info('Creating swarm of ' + ccu + ' connections to ' + host);
-        var def = ws.create_conn_swarm(host, ccu).done(function(_swarm) {
-            swarm = _swarm;
-        });
-        res.end();
-    });
+  app.get('/swarm/_stop', function(req, res) {
+    agent.stop();
+    res.end();
+  });
 
-    app.get('/swarm/_stop', function(req, res) {
-        stop();
-        res.end();
-    });
+  app.get('/swarm/_ping', function(req, res) {
+    var wait_time = req.query.wait || 5;
+    var hits = req.query.hits || 1;
+    var tick = req.query.tick || 10 // in ms
 
-    app.get('/swarm/_ping', function(req, res) {
-        var wait_time = req.query.wait || 5;
-        logger.info('Start sending ping');
-        swarm.forEach(function(conn) {
-            conn.onmessage = function(e) {
-                conn.received_at = new Date().getTime();
-            };
+    agent.setup_ping();
 
-            conn.sent_at = new Date().getTime();
-            delete conn.received_at;
-            conn.send(JSON.stringify({type: 'ping'}));
-        });
+    logger.info('Start sending ' + hits + ' pings');
+    for (var i = 0; i < hits; i++) {
+      setTimeout(function() {
+        agent.do_ping();
+      }, i * tick);
+    }
 
-        setTimeout(function() {
-            var partitions = _.partition(swarm, function(conn) {
-                return conn.received_at;
-            });
+    setTimeout(function() {
+      var report = agent.make_ping_report();
+      ping_reports.push(report);
+      res.json(report);
+    }, wait_time * 1000);
+  });
 
-            var rtts = partitions[0].map(function(conn) {
-                return conn.received_at - conn.sent_at;
-            });
+  app.get('/reports', function(req, res) {
+    res.json(ping_reports);
+  });
 
-            var report = {
-                no_received: partitions[0].length,
-                no_timeout: partitions[1].length,
-                min_rtt: _.min(rtts),
-                max_rtt: _.max(rtts),
-                mean_rtt: rtts.reduce(function(rtt1, rtt2) { return rtt1 + rtt2; }, 0) / rtts.length
-            };
-            ping_reports.push(report);
+  app.get('/reports/_flush', function(req, res) {
+    ping_reports = [];
+    res.end();
+  });
 
-            res.json(report);
-        }, wait_time * 1000);
-    });
+  app.get('/swarm/_stats', function(req, res) {
+    res.json({swarm_size: agent.swarm_size()});
+  });
 
-    app.get('/reports', function(req, res) {
-        res.json(ping_reports);
-    });
+  app.listen(port, '0.0.0.0', function() {
+    logger.info('Agent started @ port ' + port);
+  });
 
-    app.get('/reports/_flush', function(req, res) {
-        ping_reports = [];
-        res.end();
-    });
-
-    app.get('/swarm/_stats', function(req, res) {
-        res.json({swarm_size: count()});
-    });
-
-    app.listen(port, '0.0.0.0', function() {
-        logger.info('Agent started @ port ' + port);
-    });
-
-    setInterval(function() {
-        logger.info('Current swarm size: ' + count());
-    }, 10000);
+  setInterval(function() {
+    logger.info('Current swarm size: ' + agent.swarm_size());
+  }, 10000);
 };
 
 if (cluster.isMaster) {
-    cluster.fork();
+  cluster.fork();
 
-    cluster.on('exit', function(worker, code, signal) {
-        logger.error('oh crap! the worker has just died ' + code + ' - ' + signal);
-        cluster.fork();
-    });
+  cluster.on('exit', function(worker, code, signal) {
+    logger.error('oh crap! the worker has just died: ' + code + ' - ' + signal);
+    cluster.fork();
+  });
 } else {
-    spawn_worker();
+  spawn_worker();
 }
