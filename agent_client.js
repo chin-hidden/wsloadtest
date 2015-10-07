@@ -23,9 +23,10 @@ var spawn_worker = function() {
 
     var host = req.query.host || 'https://priceservice.vndirect.com.vn/realtime';
     var ccu = req.query.ccu || 20;
+    var tick = req.query.tick || 30;
 
     logger.info('Creating swarm of ' + ccu + ' connections to ' + host);
-    agent.start(host, ccu);
+    agent.start(host, ccu, tick);
     res.end();
   });
 

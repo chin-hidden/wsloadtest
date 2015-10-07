@@ -1,0 +1,146 @@
+doctype html
+html(lang="en")
+  head
+    title Master Client
+    link(rel = 'stylesheet', href = '//yui.yahooapis.com/pure/0.6.0/pure-min.css')
+  body
+    p Agents
+    .well
+      each agent in agents
+        = agent
+
+    #status
+    #ping-status
+    #stats
+    pre#stats-brief
+
+    form#start
+      fieldset
+        legend Start params
+        p
+          label(for = 'start-host') host
+          input#start-host(name = 'host', value = 'https://priceservice.vndirect.com.vn/realtime')
+        p
+          label(for = 'start-ccu') ccu
+          input#start-ccu(name = 'ccu', value = 5)
+        p
+          label(for = 'start-tick') tick time between connections (ms)
+          input#start-tick(name = 'tick', value = 30)
+        p
+          button.pure-button(type = 'submit') Start
+
+    p
+      button#stop.pure-button Stop
+      = ' '
+      button#get-stats.pure-button Get stats
+      = ' '
+      button#get-stats-brief.pure-button Get brief stats
+
+    form#ping
+      fieldset
+        legend Ping params
+        p
+          label(for = 'ping-hits') hits
+          input#ping-hits(name = 'hits', value = '20')
+        p
+          label(for = 'ping-tick') tick (ms)
+          input#ping-tick(name = 'tick', value = '50')
+        p
+          label(for = 'ping-wait') wait (s)
+          input#ping-wait(name = 'wait', value = '5')
+        p
+          button.pure-button(type = 'submit') Ping
+
+    div
+      p
+        button#do-report.pure-button Make report
+      pre#report
+
+    script#stats-tmpl(type = 'text/template').
+      <p>Stats</p>
+      <ul>
+        <% for (var i in agents) { %>
+          <li><%= agents[i].agent %>: <%= agents[i].status === 'ok' ? agents[i].swarm_size : 'dead' %></li>
+        <% } %>
+      </ul>
+
+    script(src = '//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js')
+    script(src = '//code.jquery.com/jquery-2.1.4.min.js')
+    script.
+      $('#start').on('submit', function(e) {
+        e.preventDefault();
+        var $this = $(this);
+
+        var data = {
+          host: $this.find('[name=host]').val(),
+          ccu: $this.find('[name=ccu]').val(),
+          tick: $this.find('[name=tick]').val()
+        };
+
+        $.ajax({
+          url: '/agents/_start',
+          data: data
+        }).done(function() {
+          var text = 'Agents are now running: ' + JSON.stringify(data);
+          $('#status').text(text);
+        });
+      });
+
+      $('#stop').on('click', function(e) {
+        e.preventDefault();
+        $.ajax({
+          url: '/agents/_stop',
+        }).done(function() {
+          $('#status').text('Agents stopped');
+        });
+      });
+
+      $('#get-stats').on('click', function(e) {
+        e.preventDefault();
+        $('#stats').text('');
+        $.ajax({
+          url: '/agents/stats',
+        }).done(function(data) {
+          var tmpl = $('#stats-tmpl').text();
+          $('#stats').html(_.template(tmpl)({agents: data}));
+        });
+      });
+
+      $('#get-stats-brief').on('click', function(e) {
+        e.preventDefault();
+        $('#stats-brief').text('');
+        $.ajax({
+          url: '/agents/stats/_brief',
+        }).done(function(data) {
+          $('#stats-brief').text(JSON.stringify(data));
+        });
+      });
+
+      $('#ping').on('submit', function(e) {
+        e.preventDefault();
+        var $this = $(this);
+
+        var data = {
+          hits: $this.find('[name=hits]').val(),
+          tick: $this.find('[name=ccu]').val(),
+          wait: $this.find('[name=wait]').val()
+        };
+
+        $.ajax({
+          url: '/agents/_ping',
+          data: data
+        }).done(function() {
+          var text = 'Agents have started to ping: ' + JSON.stringify(data);
+          $('#ping-status').text(text);
+        });
+      });
+
+      $('#do-report').on('click', function(e) {
+        e.preventDefault();
+        $('#report').text('');
+        $.ajax({
+          url: '/reports/_brief',
+        }).done(function(data) {
+          $('#report').text(JSON.stringify(data));
+        });
+      });

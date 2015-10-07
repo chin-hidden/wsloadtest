@@ -12,22 +12,26 @@ var ws = require('./deps/ws');
 var express = require('express');
 
 var agents = [
-  // '10.27.10.7:8082',
-  // '10.27.10.8:8082',
-  '10.27.10.9:8082',
-  // '10.28.1.113:8082',
+
 ];
 
 var port = argv.port || 8083;
 
 var app = express();
+app.engine('jade', require('jade').__express);
+app.set('view engine', 'jade');
+
+app.get('/', function(req, res) {
+  res.render('master', {agents: agents});
+});
 
 app.get('/agents/_start', function(req, res) {
   var host = req.query.host || 'http://localhost:8081/echo';
   var ccu = req.query.ccu || 20;
+  var tick = req.query.tick || 30;
 
   agents.forEach(function(agent) {
-    http.get('http://' + agent + '/swarm/_start?host=' + host + '&ccu=' + ccu).on('error', function(e) {
+    http.get('http://' + agent + '/swarm/_start?host=' + host + '&ccu=' + ccu + '&tick=' + tick).on('error', function(e) {
       logger.error('/agents/_start failed - ' + agent + ' - ' + e.message);
     });
   });
@@ -58,7 +62,7 @@ app.get('/agents/_ping', function(req, res) {
   res.end();
 });
 
-app.get('/agents/_stats', function(req, res) {
+var fetch_stats_as_promises = function() {
   var promises = [];
   agents.forEach(function(agent) {
     var def = deferred();
@@ -74,7 +78,7 @@ app.get('/agents/_stats', function(req, res) {
       });
       _res.on('end', function() {
         var stats = JSON.parse(body);
-        def.resolve({status: 'ok', description: 'ok', swarm_size: stats.swarm_size});
+        def.resolve({status: 'ok', description: 'ok', swarm_size: stats.swarm_size, agent: agent});
       });
     }).on('error', function(e) {
       logger.error('/agents/_stats failed - ' + agent + ' - ' + e.message);
@@ -83,6 +87,23 @@ app.get('/agents/_stats', function(req, res) {
     promises.push(def.promise);
   });
 
+  return promises;
+}
+app.get('/agents/stats/', function(req, res) {
+  var promises = fetch_stats_as_promises();
+  deferred.apply(null, promises).done(function(_res) {
+    if (!_.isArray(_res)) {
+      _res = [_res];
+    }
+
+    res.json(_res);
+  }, function(e) {
+    logger.error('shit happened: ' + e);
+  });
+});
+
+app.get('/agents/stats/_brief', function(req, res) {
+  var promises = fetch_stats_as_promises();
   deferred.apply(null, promises).done(function(_res) {
     if (!_.isArray(_res)) {
       _res = [_res];
@@ -92,16 +113,17 @@ app.get('/agents/_stats', function(req, res) {
       return item.status !== 'ok';
     }).length;
     var no_alive = _res.length - no_dead;
-    var swarm_size = _res.map(function(item) {
-      return item.swarm_size;
-    }).reduce(function(s1, s2) {
-      return s1 + s2;
-    }, 0);
+
+    var stats = _res.map(function(item) {
+      var el = {};
+      el[item.agent] = item.swarm_size;
+      return el;
+    });
 
     res.json({
       no_alive: no_alive,
       no_dead: no_dead,
-      swarm_size: swarm_size
+      swarm_stats: stats
     });
   }, function(e) {
     logger.error('shit happened: ' + e);
@@ -193,12 +215,21 @@ app.get('/host/_broadcast', function(req, res) {
 
   logger.info(util.format('Commanding host %s to broadcast test message to all its subscriber, rate: %d per %dms', host, hits, tick));
   ws.open_connection(host, 'test_master').done(function(conn) {
+    conn.onmessage = function(e) {
+      console.log('got data: ', e.data);
+    };
+
+    conn.send(JSON.stringify({type: 'ping', data: new Date().getTime()}));
     for (var i = 0; i < hits; i++) {
       setTimeout(function() {
         var data = util.format('[%d] %s', new Date().getTime(), message);
         conn.send(JSON.stringify({type: 'loadTest', data: data}));
       }, i * tick);
     }
+
+    setTimeout(function() {
+      conn.close();
+    }, 5000);
   });
   res.end();
 });

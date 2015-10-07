@@ -32,10 +32,11 @@ var self = {
 		return def.promise;
 	},
 
-	create_conn_swarm: function(host, count){
+	create_conn_swarm: function(host, count, tick){
 		var def = deferred();
 		var swarm = [];
 		var resolved = false;
+		tick || (tick = 30);
 		for(var i = 0; i < count; i++){
 			// this is to preserve variable i for connection id
 			(function(conn_id, delay){
@@ -64,7 +65,7 @@ var self = {
 						}
 					});
 				}, delay);
-			})(i, i * 30);
+			})(i, i * tick);
 		}
 		return def.promise;
 	},

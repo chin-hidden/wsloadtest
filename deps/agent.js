@@ -6,9 +6,9 @@ var Agent = function() {
   this.ping_stats = {};
 };
 
-Agent.prototype.start = function(host, ccu) {
+Agent.prototype.start = function(host, ccu, tick) {
   var self = this;
-  ws.create_conn_swarm(host, ccu).done(function(_swarm) {
+  ws.create_conn_swarm(host, ccu, tick).done(function(_swarm) {
     self.swarm = _swarm;
   });
 };
