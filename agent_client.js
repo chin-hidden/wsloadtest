@@ -14,6 +14,7 @@ var spawn_worker = function() {
 
   var agent = new (require('./deps/agent').Agent)();
   var ping_reports = [];
+  var broadcast_reports = [];
 
   app.get('/swarm/_start', function(req, res) {
     if (agent.swarm_size() > 0) {
@@ -22,8 +23,8 @@ var spawn_worker = function() {
     }
 
     var host = req.query.host || 'https://priceservice.vndirect.com.vn/realtime';
-    var ccu = req.query.ccu || 20;
-    var tick = req.query.tick || 30;
+    var ccu = Number(req.query.ccu) || 20;
+    var tick = Number(req.query.tick) || 30;
 
     logger.info('Creating swarm of ' + ccu + ' connections to ' + host);
     agent.start(host, ccu, tick);
@@ -36,9 +37,9 @@ var spawn_worker = function() {
   });
 
   app.get('/swarm/_ping', function(req, res) {
-    var wait_time = req.query.wait || 5;
-    var hits = req.query.hits || 1;
-    var tick = req.query.tick || 10 // in ms
+    var wait_time = Number(req.query.wait) || 5;
+    var hits = Number(req.query.hits) || 1;
+    var tick = Number(req.query.tick) || 10; // in ms
 
     agent.setup_ping();
 
@@ -56,12 +57,34 @@ var spawn_worker = function() {
     }, wait_time * 1000);
   });
 
-  app.get('/reports', function(req, res) {
+  app.get('/swarm/_broadcast', function(req, res) {
+    var wait_time = Number(req.query.wait) || 5;
+    var hits = Number(req.query.hits) || 1;
+    var tick = Number(req.query.tick) || 10; // in ms
+
+    agent.setup_broadcast();
+
+    logger.info('Request for broadcast ' + hits + ' messages per ' + tick + 'ms');
+    agent.request_for_broadcast(hits, tick);
+
+    setTimeout(function() {
+      var report = agent.make_broadcast_report();
+      broadcast_reports.push(report);
+      res.json(report);
+    }, wait_time * 1000);
+  })
+
+  app.get('/reports/ping', function(req, res) {
     res.json(ping_reports);
+  });
+
+  app.get('/reports/broadcast', function(req, res) {
+    res.json(broadcast_reports);
   });
 
   app.get('/reports/_flush', function(req, res) {
     ping_reports = [];
+    broadcast_reports = [];
     res.end();
   });
 

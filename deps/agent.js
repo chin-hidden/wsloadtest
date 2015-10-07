@@ -4,6 +4,7 @@ var _ = require('underscore');
 var Agent = function() {
   this.swarm = [];
   this.ping_stats = {};
+  this.broadcast_stats = {};
 };
 
 Agent.prototype.start = function(host, ccu, tick) {
@@ -52,6 +53,33 @@ Agent.prototype.do_ping = function() {
   });
 };
 
+Agent.prototype.setup_broadcast = function() {
+  var self = this;
+
+  this.swarm.forEach(function(conn) {
+    self.broadcast_stats[conn.id] = {no_expected: 0, no_received: 0};
+    conn.onmessage = function(e) {
+      self.broadcast_stats[conn.id].no_received++;
+    };
+  });
+};
+
+Agent.prototype.request_for_broadcast = function(hits, tick) {
+  var self = this;
+  this.swarm.forEach(function(conn) {
+    self.broadcast_stats[conn.id].no_expected = hits;
+
+    conn.send(JSON.stringify({
+      type: 'broadcast',
+      data: {
+        pwd: 'vnds$123',
+        count: hits,
+        interval: tick
+      }
+    }));
+  });
+};
+
 Agent.prototype.make_ping_report = function() {
   var ping_list = _.values(this.ping_stats);
   var partitions = _.partition(ping_list, function(ping) {
@@ -62,13 +90,22 @@ Agent.prototype.make_ping_report = function() {
     return ping.received_at - ping.sent_at;
   });
 
-  return report = {
+  return {
     no_received: partitions[0].length,
     no_timeout: partitions[1].length,
     min_rtt: _.min(rtts),
     max_rtt: _.max(rtts),
     mean_rtt: rtts.reduce(function(rtt1, rtt2) { return rtt1 + rtt2; }, 0) / rtts.length
   };
+};
+
+Agent.prototype.make_broadcast_report = function() {
+  return _.values(this.broadcast_stats).reduce(function(item1, item2) {
+    return {
+      no_expected: item1.no_expected + item2.no_expected,
+      no_received: item1.no_received + item2.no_received,
+    };
+  }, {no_expected: 0, no_received: 0});
 };
 
 module.exports = {
