@@ -12,7 +12,7 @@ var ws = require('./deps/ws');
 var express = require('express');
 
 var agents = [
-
+  '10.27.10.9:8082'
 ];
 
 var port = argv.port || 8083;
@@ -26,7 +26,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/agents/_start', function(req, res) {
-  var host = req.query.host || 'http://localhost:8081/echo';
+  var host = req.query.host || 'https://priceservice.vndirect.com.vn/realtime';
   var ccu = req.query.ccu || 20;
   var tick = req.query.tick || 30;
 
@@ -57,6 +57,21 @@ app.get('/agents/_ping', function(req, res) {
   agents.forEach(function(agent) {
     http.get('http://' + agent + '/swarm/_ping?' + qs.stringify(params)).on('error', function(e) {
       logger.error('/agents/_ping failed - ' + agent + ' - ' + e.message);
+    });
+  });
+  res.end();
+});
+
+app.get('/agents/_broadcast', function(req, res) {
+  var params = {
+    wait: req.query.wait || 5,
+    hits: req.query.hits || 1,
+    tick: req.query.tick || 10 // in ms
+  };
+
+  agents.forEach(function(agent) {
+    http.get('http://' + agent + '/swarm/_broadcast?' + qs.stringify(params)).on('error', function(e) {
+      logger.error('/agents/_broadcast failed - ' + agent + ' - ' + e.message);
     });
   });
   res.end();
@@ -205,33 +220,6 @@ app.get('/reports/_flush', function(req, res) {
 
 app.get('/agents', function(req, res) {
   res.json(agents);
-});
-
-app.get('/host/_broadcast', function(req, res) {
-  var host = req.query.host || 'https://priceservice.vndirect.com.vn/realtime';
-  var hits = req.query.hits || 1;
-  var tick = req.query.tick || 10; // in ms
-  var message = req.query.message || 'This is the message for broadcasting';
-
-  logger.info(util.format('Commanding host %s to broadcast test message to all its subscriber, rate: %d per %dms', host, hits, tick));
-  ws.open_connection(host, 'test_master').done(function(conn) {
-    conn.onmessage = function(e) {
-      console.log('got data: ', e.data);
-    };
-
-    conn.send(JSON.stringify({type: 'ping', data: new Date().getTime()}));
-    for (var i = 0; i < hits; i++) {
-      setTimeout(function() {
-        var data = util.format('[%d] %s', new Date().getTime(), message);
-        conn.send(JSON.stringify({type: 'loadTest', data: data}));
-      }, i * tick);
-    }
-
-    setTimeout(function() {
-      conn.close();
-    }, 5000);
-  });
-  res.end();
 });
 
 app.listen(port, '0.0.0.0', function() {
