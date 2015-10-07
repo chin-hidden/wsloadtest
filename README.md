@@ -35,6 +35,10 @@ This client simply create a number of connection to the server
 
 ## Master & Agent Client
 These clients are indeed http webserver and connect to the target server based on commands from http requests.
+Port by default: 8082 for agents, 8083 for master
+
+### UI
+UI is available to easily make requests to master client, available at `http://127.0.0.1:8083`
 
 ### Agents
 ```

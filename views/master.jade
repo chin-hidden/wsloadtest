@@ -45,7 +45,7 @@ html(lang="en")
           label(for = 'start-ccu') ccu
           input#start-ccu(name = 'ccu', value = 5)
         p
-          label(for = 'start-tick') tick time between connections (ms)
+          label(for = 'start-tick', title = 'tick time between attempts to make connections') tick time between connections (ms)
           input#start-tick(name = 'tick', value = 30)
         p
           button.pure-button.pure-button-primary(type = 'submit') Start
@@ -65,10 +65,10 @@ html(lang="en")
             label(for = 'ping-hits') hits
             input#ping-hits(name = 'hits', value = '20')
           p
-            label(for = 'ping-tick') tick (ms)
+            label(for = 'ping-tick', title = 'tick time between pings sent to host') tick (ms)
             input#ping-tick(name = 'tick', value = '50')
           p
-            label(for = 'ping-wait') wait (s)
+            label(for = 'ping-wait', title = 'time to wait before considering subsequent messages received to be timeout') wait (s)
             input#ping-wait(name = 'wait', value = '5')
           p
             button.pure-button.pure-button-primary(type = 'submit') Ping
@@ -80,10 +80,10 @@ html(lang="en")
             label(for = 'broadcast-hits') hits
             input#broadcast-hits(name = 'hits', value = '20')
           p
-            label(for = 'broadcast-tick') tick (ms)
+            label(for = 'broadcast-tick', title = 'tick time between messages broadcasted from host') tick (ms)
             input#broadcast-tick(name = 'tick', value = '50')
           p
-            label(for = 'broadcast-wait') wait (s)
+            label(for = 'broadcast-wait', title = 'time to wait before considering subsequent messages received to be timeout') wait (s)
             input#broadcast-wait(name = 'wait', value = '5')
           p
             button.pure-button.pure-button-primary(type = 'submit') Broadcast
