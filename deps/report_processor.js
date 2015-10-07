@@ -11,6 +11,12 @@ module.exports = {
       agents: []
     };
   },
+  gen_empty_broadcast: function() {
+    return {
+      no_expected: 0,
+      no_received: 0,
+    };
+  },
   sum: function(r1, r2) {
     return {
       no_received: r1.no_received + r2.no_received,
@@ -20,6 +26,12 @@ module.exports = {
       mean_rtt: r1.no_received > 0 || r2.no_received > 0 ?
           (r1.mean_rtt * r1.no_received + r2.mean_rtt * r2.no_received) / (r1.no_received + r2.no_received) : null,
       agents: _.uniq(r1.agents.concat(r2.agents))
-    }
+    };
+  },
+  sum_broadcast: function(r1, r2) {
+    return {
+      no_expected: r1.no_expected + r2.no_expected,
+      no_received: r1.no_received + r2.no_received,
+    };
   }
 };

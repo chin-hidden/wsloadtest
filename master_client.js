@@ -145,11 +145,11 @@ app.get('/agents/stats/_brief', function(req, res) {
   });
 });
 
-var fetch_reports_as_promises = function() {
+var fetch_ping_reports_as_promises = function() {
   var promises = [];
   agents.forEach(function(agent) {
     var def = deferred();
-    http.get('http://' + agent + '/reports', function(_res) {
+    http.get('http://' + agent + '/reports/ping', function(_res) {
       if (_res.statusCode !== 200) {
         def.resolve({status: 'nok', description: _res.statusMessage, reports: []});
         return;
@@ -175,8 +175,8 @@ var fetch_reports_as_promises = function() {
   return promises;
 };
 
-app.get('/reports', function(req, res) {
-  deferred.apply(null, fetch_reports_as_promises()).done(function(_res) {
+app.get('/reports/ping', function(req, res) {
+  deferred.apply(null, fetch_ping_reports_as_promises()).done(function(_res) {
     if (!_.isArray(_res)) {
       _res = [_res];
     }
@@ -192,7 +192,7 @@ app.get('/reports', function(req, res) {
   });
 });
 
-app.get('/reports/_brief', function(req, res) {
+app.get('/reports/ping/_brief', function(req, res) {
   deferred.apply(null, fetch_reports_as_promises()).done(function(_res) {
     if (!_.isArray(_res)) {
       _res = [_res];
@@ -203,6 +203,70 @@ app.get('/reports/_brief', function(req, res) {
     }).reduce(function(a, b) {
       return a.concat(b);
     }, []).reduce(report_processor.sum, report_processor.gen_empty());
+    res.json(reports);
+  }, function(e) {
+    logger.error('shit happened: ' + e);
+  });
+});
+
+var fetch_broadcast_reports_as_promises = function() {
+  var promises = [];
+  agents.forEach(function(agent) {
+    var def = deferred();
+    http.get('http://' + agent + '/reports/broadcast', function(_res) {
+      if (_res.statusCode !== 200) {
+        def.resolve({status: 'nok', description: _res.statusMessage, reports: []});
+        return;
+      }
+
+      var body = '';
+      _res.on('data', function(chunk) {
+        body += chunk;
+      });
+      _res.on('end', function() {
+        var reports = JSON.parse(body);
+        reports.forEach(function(report) {
+          report.agents = [agent];
+        });
+        def.resolve({status: 'ok', description: 'ok', reports: reports});
+      });
+    }).on('error', function(e) {
+      logger.error('/reports failed - ' + agent + ' - ' + e.message);
+      def.resolve({status: 'nok', description: e.message, reports: []});
+    });
+    promises.push(def.promise);
+  });
+  return promises;
+};
+
+app.get('/reports/broadcast', function(req, res) {
+  deferred.apply(null, fetch_broadcast_reports_as_promises()).done(function(_res) {
+    if (!_.isArray(_res)) {
+      _res = [_res];
+    }
+
+    var reports = _res.map(function(item) {
+      return item.reports;
+    }).reduce(function(a, b) {
+      return a.concat(b);
+    }, []);
+    res.json(reports);
+  }, function(e) {
+    logger.error('shit happened: ' + e);
+  });
+});
+
+app.get('/reports/broadcast/_brief', function(req, res) {
+  deferred.apply(null, fetch_broadcast_reports_as_promises()).done(function(_res) {
+    if (!_.isArray(_res)) {
+      _res = [_res];
+    }
+
+    var reports = _res.map(function(item) {
+      return item.reports;
+    }).reduce(function(a, b) {
+      return a.concat(b);
+    }, []).reduce(report_processor.sum_broadcast, report_processor.gen_empty_broadcast());
     res.json(reports);
   }, function(e) {
     logger.error('shit happened: ' + e);
