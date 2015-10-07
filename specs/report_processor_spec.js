@@ -3,10 +3,10 @@ var report_processor = require('../deps/report_processor');
 var _ = require('underscore');
 
 describe('report_processor', function() {
-  describe('gen_empty', function() {
+  describe('gen_empty_ping', function() {
     var report;
     beforeEach(function() {
-      report = report_processor.gen_empty();
+      report = report_processor.gen_empty_ping();
     });
 
     it('should create a new object', function() {
@@ -39,16 +39,16 @@ describe('report_processor', function() {
     });
   });
 
-  describe('sum', function() {
+  describe('sum_ping', function() {
     var result, r1, r2;
 
     beforeEach(function() {
-      r1 = report_processor.gen_empty();
-      r2 = report_processor.gen_empty();
+      r1 = report_processor.gen_empty_ping();
+      r2 = report_processor.gen_empty_ping();
     })
 
     it('should create a new object with report structure', function() {
-      result = report_processor.sum(r1, r2);
+      result = report_processor.sum_ping(r1, r2);
       expect(result).to.be.an('object');
       expect(result).to.have.all.keys('no_received', 'no_timeout', 'min_rtt', 'max_rtt', 'mean_rtt', 'agents');
     });
@@ -62,7 +62,7 @@ describe('report_processor', function() {
         r2.mean_rtt = .5;
         r2.agents = ['abc'];
 
-        result = report_processor.sum(r1, r2);
+        result = report_processor.sum_ping(r1, r2);
         _.each(r2, function(v, k) {
           if (k === 'agents') {
             return;
@@ -81,7 +81,7 @@ describe('report_processor', function() {
         r1.mean_rtt = .5;
         r1.agents = ['abc'];
 
-        result = report_processor.sum(r1, r2);
+        result = report_processor.sum_ping(r1, r2);
         _.each(r1, function(v, k) {
           if (k === 'agents') {
             return;
@@ -107,7 +107,7 @@ describe('report_processor', function() {
         r2.mean_rtt = 3;
         r2.agents = ['def'];
 
-        result = report_processor.sum(r1, r2);
+        result = report_processor.sum_ping(r1, r2);
       });
 
       it('should have no_received as total from r1 & r2', function() {
@@ -133,7 +133,7 @@ describe('report_processor', function() {
 
       it('should have agents combined from both', function() {
         r2.agents = ['abc', 'def'];
-        result = report_processor.sum(r1, r2);
+        result = report_processor.sum_ping(r1, r2);
 
         expect(result.agents).to.include.members(r1.agents);
         expect(result.agents).to.include.members(r2.agents);

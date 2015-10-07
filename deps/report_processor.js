@@ -1,7 +1,7 @@
 var _ = require('underscore');
 
 module.exports = {
-  gen_empty: function() {
+  gen_empty_ping: function() {
     return {
       no_received: 0,
       no_timeout: 0,
@@ -17,7 +17,7 @@ module.exports = {
       no_received: 0,
     };
   },
-  sum: function(r1, r2) {
+  sum_ping: function(r1, r2) {
     return {
       no_received: r1.no_received + r2.no_received,
       no_timeout: r1.no_timeout + r2.no_timeout,

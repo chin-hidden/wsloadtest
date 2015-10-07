@@ -193,7 +193,7 @@ app.get('/reports/ping', function(req, res) {
 });
 
 app.get('/reports/ping/_brief', function(req, res) {
-  deferred.apply(null, fetch_reports_as_promises()).done(function(_res) {
+  deferred.apply(null, fetch_ping_reports_as_promises()).done(function(_res) {
     if (!_.isArray(_res)) {
       _res = [_res];
     }
@@ -202,7 +202,7 @@ app.get('/reports/ping/_brief', function(req, res) {
       return item.reports;
     }).reduce(function(a, b) {
       return a.concat(b);
-    }, []).reduce(report_processor.sum, report_processor.gen_empty());
+    }, []).reduce(report_processor.sum_ping, report_processor.gen_empty_ping());
     res.json(reports);
   }, function(e) {
     logger.error('shit happened: ' + e);
