@@ -1,10 +1,7 @@
 var argv = require('yargs').argv;
-var util = require('util');
-var _ = require('underscore');
 var express = require('express');
 var cluster = require('cluster');
 
-var ws = require('./deps/ws');
 var logger = require('./deps/logger');
 
 var spawn_worker = function() {
