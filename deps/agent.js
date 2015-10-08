@@ -11,7 +11,7 @@ var Agent = function() {
 
 Agent.prototype.start = function(host, ccu, tick) {
   var self = this;
-  ws.create_conn_swarm(host, ccu, tick).done(function(_swarm) {
+  return ws.create_conn_swarm(host, ccu, tick).then(function(_swarm) {
     self.swarm = _swarm;
   });
 };
@@ -57,6 +57,7 @@ Agent.prototype.do_ping = function() {
 
 Agent.prototype.setup_broadcast = function() {
   var self = this;
+  this.broadcast_stats = {};
 
   this.swarm.forEach(function(conn) {
     self.broadcast_stats[conn.id] = new BroadcastReport();
