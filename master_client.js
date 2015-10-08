@@ -6,7 +6,8 @@ var _ = require('underscore');
 var qs = require('querystring');
 
 var logger = require('./deps/logger');
-var report_processor = require('./deps/report_processor');
+var PingReport = require('./deps/report').PingReport;
+var BroadcastReport = require('./deps/report').BroadcastReport;
 var ws = require('./deps/ws');
 
 var express = require('express');
@@ -160,9 +161,12 @@ var fetch_ping_reports_as_promises = function() {
         body += chunk;
       });
       _res.on('end', function() {
-        var reports = JSON.parse(body);
-        reports.forEach(function(report) {
+        var objects = JSON.parse(body);
+        var reports = []
+        objects.forEach(function(object) {
+          var report = new PingReport(object);
           report.agents = [agent];
+          reports.push(report);
         });
         def.resolve({status: 'ok', description: 'ok', reports: reports});
       });
@@ -202,7 +206,9 @@ app.get('/reports/ping/_brief', function(req, res) {
       return item.reports;
     }).reduce(function(a, b) {
       return a.concat(b);
-    }, []).reduce(report_processor.sum_ping, report_processor.gen_empty_ping());
+    }, []).reduce(function(r1, r2) {
+      return r1.sum(r2);
+    }, new PingReport());
     res.json(reports);
   }, function(e) {
     logger.error('shit happened: ' + e);
@@ -224,9 +230,12 @@ var fetch_broadcast_reports_as_promises = function() {
         body += chunk;
       });
       _res.on('end', function() {
-        var reports = JSON.parse(body);
-        reports.forEach(function(report) {
+        var objects = JSON.parse(body);
+        var reports = []
+        objects.forEach(function(object) {
+          var report = new BroadcastReport(object);
           report.agents = [agent];
+          reports.push(report);
         });
         def.resolve({status: 'ok', description: 'ok', reports: reports});
       });
@@ -266,7 +275,9 @@ app.get('/reports/broadcast/_brief', function(req, res) {
       return item.reports;
     }).reduce(function(a, b) {
       return a.concat(b);
-    }, []).reduce(report_processor.sum_broadcast, report_processor.gen_empty_broadcast());
+    }, []).reduce(function(r1, r2) {
+      return r1.sum(r2);
+    }, new BroadcastReport());
     res.json(reports);
   }, function(e) {
     logger.error('shit happened: ' + e);

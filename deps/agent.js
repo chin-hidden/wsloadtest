@@ -1,5 +1,7 @@
 var ws = require('./ws');
 var _ = require('underscore');
+var PingReport = require('./report').PingReport;
+var BroadcastReport = require('./report').BroadcastReport;
 
 var Agent = function() {
   this.swarm = [];
@@ -57,7 +59,7 @@ Agent.prototype.setup_broadcast = function() {
   var self = this;
 
   this.swarm.forEach(function(conn) {
-    self.broadcast_stats[conn.id] = {no_expected: 0, no_received: 0};
+    self.broadcast_stats[conn.id] = new BroadcastReport();
     conn.onmessage = function(e) {
       self.broadcast_stats[conn.id].no_received++;
     };
@@ -90,22 +92,19 @@ Agent.prototype.make_ping_report = function() {
     return ping.received_at - ping.sent_at;
   });
 
-  return {
+  return new PingReport({
     no_received: partitions[0].length,
     no_timeout: partitions[1].length,
     min_rtt: _.min(rtts),
     max_rtt: _.max(rtts),
     mean_rtt: rtts.reduce(function(rtt1, rtt2) { return rtt1 + rtt2; }, 0) / rtts.length
-  };
+  });
 };
 
 Agent.prototype.make_broadcast_report = function() {
-  return _.values(this.broadcast_stats).reduce(function(item1, item2) {
-    return {
-      no_expected: item1.no_expected + item2.no_expected,
-      no_received: item1.no_received + item2.no_received,
-    };
-  }, {no_expected: 0, no_received: 0});
+  return _.values(this.broadcast_stats).reduce(function(r1, r2) {
+    return r1.sum(r2);
+  }, new BroadcastReport());
 };
 
 module.exports = {
