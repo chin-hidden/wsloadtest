@@ -68,14 +68,14 @@ Master.prototype.fetch_raw_stats = function() {
     var def = deferred();
 
     var url = 'http://' + agent + '/swarm/_stats';
-    request.get({url: url}, function(e, res, body) {
+    request.get({url: url, timeout: 1000}, function(e, res, body) {
       if (e) {
         logger.error('/agents/_stats failed - ' + agent + ' - ' + e.message);
         def.resolve({status: 'nok', description: e.message, swarm_size: 0, agent: agent});
         return;
       }
       if (res.statusCode !== 200) {
-        def.resolve({status: 'nok', description: _res.statusMessage, swarm_size: 0, agent: agent});
+        def.resolve({status: 'nok', description: res.statusMessage, swarm_size: 0, agent: agent});
         return;
       }
       var stats = JSON.parse(body);
@@ -130,7 +130,7 @@ Master.prototype.fetch_ping_reports = function() {
   var promises = [];
   this.agents.forEach(function(agent) {
     var def = deferred();
-    request.get('http://' + agent + '/reports/ping', function(e, res, body) {
+    request.get({url: 'http://' + agent + '/reports/ping', timeout: 2000}, function(e, res, body) {
       if (e) {
         logger.error('/reports failed - ' + agent + ' - ' + e.message);
         def.resolve({status: 'nok', description: e.message, reports: []});
@@ -195,7 +195,7 @@ Master.prototype.fetch_broadcast_reports = function() {
   var promises = [];
   this.agents.forEach(function(agent) {
     var def = deferred();
-    request.get('http://' + agent + '/reports/broadcast', function(e, res, body) {
+    request.get({url: 'http://' + agent + '/reports/broadcast', timeout: 2000}, function(e, res, body) {
       if (e) {
         logger.error('/reports failed - ' + agent + ' - ' + e.message);
         def.resolve({status: 'nok', description: e.message, reports: []});
