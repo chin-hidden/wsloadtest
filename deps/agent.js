@@ -47,7 +47,7 @@ Agent.prototype.do_ping = function() {
   var self = this;
   this.swarm.forEach(function(conn) {
     var now = new Date().getTime();
-    var key = conn.id + '.' + now;
+    var key = conn.id + '.' + now + '.' + Math.floor((Math.random()) * 0x10000).toString(16);
     self.ping_stats[key] = {
       sent_at: now
     };
