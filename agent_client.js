@@ -42,9 +42,10 @@ var spawn_worker = function() {
 
     logger.info('Start sending ' + hits + ' pings');
     for (var i = 0; i < hits; i++) {
+      var delay = Math.max(i * tick - Math.random() * tick * 0.5, 0); // let's spice things up with a bit of randomness
       setTimeout(function() {
         agent.do_ping();
-      }, i * tick);
+      }, delay);
     }
 
     setTimeout(function() {
