@@ -14,6 +14,7 @@
     "yargs": "*"
   },
   "devDependencies": {
-    "chai": "^3.3.0"
+    "chai": "^3.3.0",
+    "sinon": "^1.17.1"
   }
 }
