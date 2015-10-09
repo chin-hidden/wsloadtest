@@ -16,5 +16,9 @@
   "devDependencies": {
     "chai": "^3.3.0",
     "sinon": "^1.17.1"
+  },
+  "scripts": {
+    "babel-node": "babel-node --stage 0",
+    "test": "mocha --compilers js:babel/register specs"
   }
 }
